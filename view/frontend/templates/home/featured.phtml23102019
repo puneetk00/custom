@@ -1,0 +1,138 @@
+   <!-- featured_sec start -->
+   <section class="featured_sec">
+      <div class="container">
+         <div class="row">
+            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+
+               <h1>Featured Products</h1>
+
+               <div class="insdFeatured">
+
+                  <div class="featBlock">
+                     <div class="imgSec">
+                        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam eleifend .</p>
+                        <a href="#">See More</a>
+                       <img src='<?php echo $this->getViewFileUrl('Synapse_Custom::images/thumb1.jpg'); ?>' alt="image-icon">
+                     </div>
+
+                     <div class="txt">
+                        <h2>Business Card</h2>
+                     </div>
+                  </div>
+
+
+                  <div class="featBlock">
+                     <div class="imgSec">
+                        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam eleifend .</p>
+                        <a href="#">See More</a>
+                         <img src='<?php echo $this->getViewFileUrl('Synapse_Custom::images/thumb2.jpg'); ?>' alt="image-icon">
+                     </div>
+
+                     <div class="txt">
+                        <h2>Magnetic Cards</h2>
+                     </div>
+                  </div>
+
+
+                  <div class="featBlock">
+                     <div class="imgSec">
+                        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam eleifend .</p>
+                        <a href="#">See More</a>
+                        <img src='<?php echo $this->getViewFileUrl('Synapse_Custom::images/thumb3.jpg'); ?>' alt="image-icon">
+                     </div>
+
+                     <div class="txt">
+                        <h2>Post Cards</h2>
+                     </div>
+                  </div>
+
+
+                  <div class="featBlock">
+                     <div class="imgSec">
+                        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam eleifend .</p>
+                        <a href="#">See More</a>
+                       <img src='<?php echo $this->getViewFileUrl('Synapse_Custom::images/thumb4.jpg'); ?>' alt="image-icon">
+                     </div>
+
+                     <div class="txt">
+                        <h2>stationery</h2>
+                     </div>
+                  </div>
+
+                  <div class="featBlock">
+                     <div class="imgSec">
+                        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam eleifend .</p>
+                        <a href="#">See More</a>
+                       <img src='<?php echo $this->getViewFileUrl('Synapse_Custom::images/thumb5.jpg'); ?>' alt="image-icon">
+                     </div>
+
+                     <div class="txt">
+                        <h2>Bi-Folds & Tri-Folds, Flyers &
+                           Brochures</h2>
+                     </div>
+                  </div>
+
+
+                  <div class="featBlock">
+                     <div class="imgSec">
+                        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam eleifend .</p>
+                        <a href="#">See More</a>
+                        <img src='<?php echo $this->getViewFileUrl('Synapse_Custom::images/thumb6.jpg'); ?>' alt="image-icon">
+                     </div>
+
+                     <div class="txt">
+                        <h2>Commercial Envelopes</h2>
+                     </div>
+                  </div>
+
+
+                  <div class="featBlock">
+                     <div class="imgSec">
+                        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam eleifend .</p>
+                        <a href="#">See More</a>
+                       <img src='<?php echo $this->getViewFileUrl('Synapse_Custom::images/thumb7.jpg'); ?>' alt="image-icon">
+                     </div>
+
+                     <div class="txt">
+                        <h2>car magnetS</h2>
+                     </div>
+                  </div>
+
+                  <div class="featBlock">
+                     <div class="imgSec">
+                        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam eleifend .</p>
+                        <a href="#">See More</a>
+                        <img src='<?php echo $this->getViewFileUrl('Synapse_Custom::images/thumb8.jpg'); ?>' alt="image-icon">
+                     </div>
+
+                     <div class="txt">
+                        <h2>Yard Signs</h2>
+                     </div>
+                  </div>
+
+
+                  <div class="featBlock">
+                     <div class="imgSec">
+                        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam eleifend .</p>
+                        <a href="#">See More</a>
+                       <img src='<?php echo $this->getViewFileUrl('Synapse_Custom::images/thumb9.jpg'); ?>' alt="image-icon">
+                     </div>
+
+                     <div class="txt">
+                        <h2>Carbonless formS</h2>
+                     </div>
+                  </div>
+
+               </div>
+
+            </div>
+         </div>
+      </div>
+   </section>
+   <!-- featured_sec end -->
+
+
+
+   <!-- why box start -->
+   
+   <!-- why box end -->

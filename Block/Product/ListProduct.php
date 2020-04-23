@@ -1,0 +1,101 @@
+<?php
+
+namespace Synapse\Custom\Block\Product;
+
+
+use Magento\Catalog\Api\CategoryRepositoryInterface;
+use Magento\Catalog\Block\Product\ProductList\Toolbar;
+use Magento\Catalog\Model\Category;
+use Magento\Catalog\Model\Config;
+use Magento\Catalog\Model\Layer;
+use Magento\Catalog\Model\Layer\Resolver;
+use Magento\Catalog\Model\Product;
+use Magento\Catalog\Model\ResourceModel\Product\Collection;
+use Magento\Catalog\Pricing\Price\FinalPrice;
+use Magento\Eav\Model\Entity\Collection\AbstractCollection;
+use Magento\Framework\App\ActionInterface;
+use Magento\Framework\App\Config\Element;
+use Magento\Framework\Data\Helper\PostHelper;
+use Magento\Framework\DataObject\IdentityInterface;
+use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Framework\Pricing\Render;
+use Magento\Framework\Url\Helper\Data;
+use Magento\Framework\App\Request\Http;
+class ListProduct extends \Magento\Catalog\Block\Product\ListProduct
+{
+    protected $_customerSession;
+    protected $categoryFactory;
+    protected $_catalogLayer;
+    protected $_registry;
+    protected $_productCollectionFactory;
+	protected $_sessionFactory;
+
+    /**
+     * ListProduct constructor.
+     * @param \Magento\Catalog\Block\Product\Context $context
+     * @param \Magento\Framework\Data\Helper\PostHelper $postDataHelper
+     * @param \Magento\Catalog\Model\Layer\Resolver $layerResolver
+     * @param \Magento\Catalog\Api\CategoryRepositoryInterface $categoryRepository
+     * @param \Magento\Framework\Url\Helper\Data $urlHelper
+     * @param Helper $helper
+     * @param array $data
+     * @param \Magento\Customer\Model\Session $customerSession
+     * @param \Magento\Catalog\Model\CategoryFactory $categoryFactory,
+     */
+    public function __construct(
+    \Magento\Catalog\Block\Product\Context $context,
+    \Magento\Framework\Data\Helper\PostHelper $postDataHelper,
+    \Magento\Catalog\Model\Layer\Resolver $layerResolver,
+    \Magento\Catalog\Api\CategoryRepositoryInterface $categoryRepository,
+    \Magento\Framework\Url\Helper\Data $urlHelper,
+    \Magento\Framework\Registry $registry,
+	\Magento\Catalog\Model\ResourceModel\Product\CollectionFactory $productCollectionFactory,
+    \Magento\Customer\Model\Session $customerSession,
+    \Magento\Catalog\Model\CategoryFactory $categoryFactory,
+	array $data = []
+    ) {
+        $this->_catalogLayer = $layerResolver->get();
+        $this->_customerSession = $customerSession;
+        $this->categoryFactory = $categoryFactory;
+        $this->_registry = $registry;
+        $this->_productCollectionFactory = $productCollectionFactory;
+        
+        parent::__construct(
+            $context,
+            $postDataHelper,
+            $layerResolver,
+            $categoryRepository,
+            $urlHelper,
+            $data
+        );
+
+    }
+
+    public function _getProductCollection()
+    {
+       $currentCategory = $this->_registry->registry('current_category');
+       $categoryId = $currentCategory->getId();
+
+		$category = $this->categoryFactory->create()->load($categoryId);
+		$collection = $this->_productCollectionFactory->create();
+		$collection->addAttributeToSelect('*');
+		$collection->setOrder('position', 'asc');
+		$collection->addCategoryFilter($category);
+		$collection->addAttributeToFilter('visibility', \Magento\Catalog\Model\Product\Visibility::VISIBILITY_BOTH);
+		$collection->addAttributeToFilter('status',\Magento\Catalog\Model\Product\Attribute\Source\Status::STATUS_ENABLED);
+		
+		if($this->_customerSession->isLoggedIn()) {	
+			$objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+			$customerRepository = $objectManager->get('Magento\Customer\Api\CustomerRepositoryInterface');
+			$customer = $customerRepository->getById($this->_customerSession->getId());
+			if($customer->getCustomAttribute('company')){
+			$ownerCompany= $customer->getCustomAttribute('company')->getValue();
+			if($ownerCompany) {				
+				$collection->addAttributeToFilter('customer_company', array('in' => array('all',$ownerCompany))); 
+			}
+		}
+		}
+				
+		return $collection;
+    }
+}
