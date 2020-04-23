@@ -1,0 +1,94 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">	
+    <type name="Magento\Customer\Controller\Account\LoginPost">
+        <plugin name="SynapseCustom::around" type="Synapse\Custom\Plugin\Customer\Controller\Account\LoginPost" />
+    </type>
+	<type name="Magento\Catalog\Block\Product\ListProduct">
+        <plugin name="SynapseListCustom::before" type="Synapse\Custom\Plugin\Catalog\Block\Product\ListProduct" />
+    </type>
+	<!-- Override category model collection -->
+	<!-- <preference for="Magento\Catalog\Model\Layer" type="Synapse\Custom\Model\Layer"/>-->
+	<!--<type name="Magento\Catalog\Block\Product\View">
+        <plugin name="synapse-custom-product-block" type="Synapse\Custom\Plugin\Catalog\Block\Product\ViewPlugin" />
+    </type>-->
+	<preference for="Magento\Catalog\Helper\Product" type="Synapse\Custom\Helper\Product"/>
+	<!-- Overide vendor block file -->
+	<preference for="Magento\Catalog\Block\Product\ListProduct" type="Synapse\Custom\Block\Product\ListProduct"/>
+	
+	<!-- UPS Method show/hide -->
+	<type name="Magento\Ups\Model\Carrier">
+        <plugin name="hideUps" type="Synapse\Custom\Plugin\Shipping\Model\Hide"/>
+    </type>
+	<!-- Payment method invalidate -->
+	<preference for="Magento\OfflinePayments\Block\Info\Purchaseorder" type="Synapse\Custom\Block\Adminhtml\Info\Purchaseorder"/>
+	<!--  for admin sales order item show qty sets -->
+	<preference for="Magento\Sales\Block\Adminhtml\Order\View\Items\Renderer\DefaultRenderer" type="Synapse\Custom\Block\Rewrite\DefaultRenderer" />
+	<type name="Magento\Sales\Block\Adminhtml\Order\View\Items\Renderer\DefaultRenderer">
+		<plugin name="fabelio-order-view-information" type="Synapse\Custom\Plugin\DefaultRendererPlugin" sortOrder="1" />
+	</type>
+	<!-- For flatrate charge customization  -->
+	<!-- <type name="Magento\OfflineShipping\Model\Carrier\Flatrate"> -->
+		<!-- <plugin name="synapse_custom_offlineshipping_carrier_flatrate_itempricecalculator" type="Synapse\Custom\Plugin\Flatrate\Carrier" /> -->
+	<!-- </type> -->
+	<preference for="Magento\OfflineShipping\Model\Carrier\Flatrate" type="Synapse\Custom\Model\Rewrite\Flatrate" />
+	
+	<!-- 25112019 -->
+	<preference for="Synapse\Custom\Api\SyncategoryRepositoryInterface" type="Synapse\Custom\Model\SyncategoryRepository"/>
+	<preference for="Synapse\Custom\Api\Data\SyncategoryInterface" type="Synapse\Custom\Model\Data\Syncategory"/>
+	<preference for="Synapse\Custom\Api\Data\SyncategorySearchResultsInterface" type="Magento\Framework\Api\SearchResults"/>
+	<virtualType name="Synapse\Custom\Model\ResourceModel\Syncategory\Grid\Collection" type="Magento\Framework\View\Element\UiComponent\DataProvider\SearchResult">
+		<arguments>
+			<argument name="mainTable" xsi:type="string">synapse_custom_syncategory</argument>
+			<argument name="resourceModel" xsi:type="string">Synapse\Custom\Model\ResourceModel\Syncategory\Collection</argument>
+		</arguments>
+	</virtualType>
+	<type name="Magento\Framework\View\Element\UiComponent\DataProvider\CollectionFactory">
+		<arguments>
+			<argument name="collections" xsi:type="array">
+				<item name="synapse_custom_syncategory_listing_data_source" xsi:type="string">Synapse\Custom\Model\ResourceModel\Syncategory\Grid\Collection</item>
+			</argument>
+		</arguments>
+	</type>
+	
+	<preference for="Synapse\Custom\Api\SyntemplatesRepositoryInterface" type="Synapse\Custom\Model\SyntemplatesRepository"/>
+	<preference for="Synapse\Custom\Api\Data\SyntemplatesInterface" type="Synapse\Custom\Model\Data\Syntemplates"/>
+	<preference for="Synapse\Custom\Api\Data\SyntemplatesSearchResultsInterface" type="Magento\Framework\Api\SearchResults"/>
+	<virtualType name="Synapse\Custom\Model\ResourceModel\Syntemplates\Grid\Collection" type="Magento\Framework\View\Element\UiComponent\DataProvider\SearchResult">
+		<arguments>
+			<argument name="mainTable" xsi:type="string">synapse_custom_syntemplates</argument>
+			<argument name="resourceModel" xsi:type="string">Synapse\Custom\Model\ResourceModel\Syntemplates\Collection</argument>
+		</arguments>
+	</virtualType>
+	<type name="Magento\Framework\View\Element\UiComponent\DataProvider\CollectionFactory">
+		<arguments>
+			<argument name="collections" xsi:type="array">
+				<item name="synapse_custom_syntemplates_listing_data_source" xsi:type="string">Synapse\Custom\Model\ResourceModel\Syntemplates\Grid\Collection</item>
+			</argument>
+		</arguments>
+	</type>
+	
+	<virtualType name="Synapse\Custom\HelloWorldImageUpload" type="Synapse\Custom\Model\ImageUploader">
+		<arguments>
+				<argument name="baseTmpPath" xsi:type="string">test/tmp</argument>
+				<argument name="basePath" xsi:type="string">syncat/image</argument>
+				<argument name="allowedExtensions" xsi:type="array">
+					<item name="jpg" xsi:type="string">jpg</item>
+					<item name="jpeg" xsi:type="string">jpeg</item>
+					<item name="gif" xsi:type="string">gif</item>
+					<item name="png" xsi:type="string">png</item>
+				</argument>
+		</arguments>
+	</virtualType>
+	<type name="Synapse\Custom\Controller\Adminhtml\Syntemplates\Upload">
+		<arguments>
+				<argument name="imageUploader" xsi:type="object">Synapse\Custom\HelloWorldImageUpload</argument>
+		</arguments>
+	</type>
+	<type name="Magento\Authorizenet\Model\Directpost">
+        <plugin name="checkTransIdTestMode" type="Synapse\Custom\Model\Authorizenet\Directpost"/>
+    </type>
+	<!--
+	<type name="Magento\Customer\Model\Address\AbstractAddres">
+        <plugin name="removeLastnameValidation" type="Synapse\Custom\Model\Customer\Address\AbstractAddres"/>
+    </type> -->
+</config>

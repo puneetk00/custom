@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<form xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Ui:etc/ui_configuration.xsd">    
+<fieldset name="customer">
+	<field name="lastname" formElement="input">
+		<argument name="data" xsi:type="array">
+			<item name="config" xsi:type="array">
+				<item name="source" xsi:type="string">customer</item>
+			</item>
+		</argument>
+		<settings>
+			<validation>
+				<rule name="required-entry" xsi:type="boolean">false</rule>
+			</validation>
+			<dataType>text</dataType>
+		</settings>
+	</field>
+</fieldset>
+<fieldset name="address">
+	<field name="lastname" formElement="input">
+		<argument name="data" xsi:type="array">
+			<item name="config" xsi:type="array">
+				<item name="source" xsi:type="string">address</item>
+			</item>
+		</argument>
+		<settings>
+			<validation>
+				<rule name="required-entry" xsi:type="boolean">false</rule>
+			</validation>
+			<dataType>text</dataType>
+			<imports>
+				<link name="default">${ $.provider }:data.customer.lastname</link>
+			</imports>
+		</settings>
+	</field>
+ </fieldset>
+ </form>

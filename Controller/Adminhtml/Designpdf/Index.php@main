@@ -1,0 +1,340 @@
+<?php
+namespace Synapse\Custom\Controller\Adminhtml\Designpdf;
+use Magento\Backend\App\Action\Context;
+use Magento\Framework\View\Result\PageFactory;
+require_once('lib/TCPDF/TCPDF.php');
+
+class Index extends \Magento\Backend\App\Action
+{
+  protected $_publicActions = ['index'];
+	/**
+     * @var PageFactory
+     */
+    protected $resultPageFactory;
+	protected $orderItemRepository;
+	protected $fileFactory;
+	protected $_storeManager;
+	protected $_urlInterface;
+
+    /**
+     * @param Context $context
+     * @param PageFactory $resultPageFactory
+     */
+    public function __construct(
+        Context $context,
+		\Magento\Sales\Api\OrderItemRepositoryInterface $orderItemRepository,
+        PageFactory $resultPageFactory,
+		\Magento\Store\Model\StoreManagerInterface $storeManager,
+        \Magento\Framework\UrlInterface $urlInterface,
+		\Magento\Framework\App\Response\Http\FileFactory $fileFactory
+    ) {
+        $this->resultPageFactory = $resultPageFactory;
+		$this->orderItemRepository = $orderItemRepository;
+		$this->fileFactory = $fileFactory;
+		$this->_storeManager = $storeManager;
+        $this->_urlInterface = $urlInterface;
+		parent::__construct($context);
+    }
+
+    /**
+     * @return \Magento\Framework\View\Result\Page
+     */
+    public function execute()
+    {
+		if($this->getRequest()->getParam('item_id')) {
+			$item_id = $this->getRequest()->getParam('item_id');
+			$itemCollection = $this->orderItemRepository->get($item_id);
+			$cardJson = '';
+			if($itemCollection->getJsonCard()) {
+				$frontCardJson = $itemCollection->getJsonCard();
+				
+				
+				$frontImage = $itemCollection->getJsonImage();
+				$backImageBack = $itemCollection->getJsonImageBack();	
+				$frontPrintData = $this->getCanvasJsonfile($frontCardJson);
+
+					
+				$unit='in';
+		
+				$orientation='P'; // For portrait
+				$unit='in';
+				$width_in = 336/96;
+				$height_in = 192/96;
+				
+				//$width_in = 596/96;
+				//$height_in = 357/96;
+				
+				
+				$format=array($width_in,$height_in);
+				
+				$pdf = new \TCPDF_TCPDF('', $unit, $format, true, 'UTF-8', false);
+				
+				//$pdf = new \TCPDF_TCPDF();
+				$pdf->SetCreator(PDF_CREATOR);
+				$pdf->SetMargins(0, 0, 0, true);
+				$pdf->SetLeftMargin(0);
+				$pdf->SetRightMargin(0);
+				$pdf->SetHeaderMargin(0);
+				$pdf->SetFooterMargin(0);
+
+				$pdf->setPrintFooter(false);
+				$pdf->setPrintHeader(false);
+				// set auto page breaks false
+				$pdf->SetAutoPageBreak(false, 0);
+				
+				
+				$pdf->AddPage();		
+				// background image
+				if(isset($frontPrintData->backgroundImage->src)){
+					$background_image_path = $frontPrintData->backgroundImage->src;
+					$pdf->Image($background_image_path, 0, 0, $width_in, $height_in, 'JPG', '', '', true, 200, '', false, false, 0, false, false, true);
+				} else {
+					$pdf->Rect(0, 0, $width_in, $height_in, 'F', "",  array(0, 0, 255));
+				}
+								
+				// Set Text and Image on PDF
+				// create two array for store text & images information separately 
+				$imageObjects = $textObjects = [];
+				foreach ($frontPrintData->objects as $object) {
+					if ($object->type == 'image') {
+						$imageObjects[] = $object;
+					} else if ($object->type == 'i-text') {
+						$textObjects[] = $object;
+					}
+				}
+				// add canvas image on pdf
+				foreach ($imageObjects as $object) {
+					$this->addImageToLarge($object, $pdf);
+				}
+				// add canvas text on pdf
+				foreach ($textObjects as $object) {
+					$this->addTextToLarge($object, $pdf);
+				} 
+				
+				
+				// canvas backside
+				$backCardJson = $itemCollection->getJsonCardBack();
+				if($backCardJson) {
+					$backPrintData = $this->getCanvasJsonfile($backCardJson);
+					
+					$pdf->AddPage();		
+					// background image
+					if(isset($backPrintData->backgroundImage->src)){
+						$backsideground_image_path = $backPrintData->backgroundImage->src;
+						$pdf->Image($backsideground_image_path, 0, 0, $width_in, $height_in, 'JPG', '', '', true, 200, '', false, false, 0, false, false, true);
+					} else {
+						$pdf->Rect(0, 0, $width_in, $height_in, 'F', "",  array(0, 0, 255));
+					}
+									
+					// Set Text and Image on PDF
+					// create two array for store text & images information separately 
+					$imageBackObjects = $textBackObjects = [];
+					foreach ($backPrintData->objects as $object) {
+						if ($object->type == 'image') {
+							$imageBackObjects[] = $object;
+						} else if ($object->type == 'i-text') {
+							$textBackObjects[] = $object;
+						}
+					}
+					// add canvas image on pdf
+					foreach ($imageBackObjects as $object) {
+						$this->addImageToLarge($object, $pdf);
+					}
+					// add canvas text on pdf
+					foreach ($textBackObjects as $object) {
+						$this->addTextToLarge($object, $pdf);
+					} 
+				}		
+				// generate PDF
+				$baseUrl = $this->_storeManager->getStore()->getBaseUrl();
+				$time_stamp = time();
+				$local_path = '/home/uprj10754/www/'.'var/'.$time_stamp.'.pdf';
+				$pdf->Output($local_path, 'F');			
+				$pdf->Close();
+				
+				$file_name = $time_stamp.'.pdf';
+				//$url = $base_url.'/sites/all/modules/custom/collateral_design_system/files/preview'.$file_name;
+		  
+				// Header content type 
+				header('Content-type: application/pdf'); 			
+				header('Content-Disposition: inline; filename="' . $file_name . '"'); 				  
+				header('Content-Transfer-Encoding: binary'); 				  
+				header('Accept-Ranges: bytes'); 				  
+				// Read the file 
+				@readfile($local_path); 				
+			}
+		}		
+    }
+	
+	/**
+	*
+	*/
+	public function addImageToLarge($object, $pdf) {
+		$pdf->StartTransform();
+		if (!empty($object->src)) {
+			$left = ($object->left) / 96;
+			$top = ($object->top) / 96;
+			if($left < 0 ){$left *= -1;}
+			if($top < 0 ){$top *= -1;}
+			
+			$width = ($object->width * $object->scaleX) / 96;
+			$height = ($object->height * $object->scaleY) / 96;
+			$pdf->setXY($left, $top);
+			
+			$pdf->Rotate(360-$object->angle);
+			$link_url = isset($object->associatedUrl) ? $object->associatedUrl: '';
+			//set Transform
+			$pdf->SetAlpha($object->opacity);
+			$pdf->Image($object->src, $left, $top, $width , $height, '',$link_url, '', false, 300, '', false, false, 0);		//Restore Transform
+			$pdf->SetAlpha();
+			$pdf->StopTransform();
+		}		
+	}
+	
+	/**
+	*
+	*/
+	public function addTextToLarge($object, $pdf) {
+		$pdf->StartTransform();
+ 		$fnt['Times New Roman'] = $this->_storeManager->getStore()->getBaseUrl()."font/times_6.ttf";
+		$fnt['arial'] = $this->_storeManager->getStore()->getBaseUrl()."font/arial.ttf";
+		$fnt['Arial'] = $this->_storeManager->getStore()->getBaseUrl()."font/arial.ttf";
+		$fnt['Arial Black'] = $this->_storeManager->getStore()->getBaseUrl()."font/ariblk_8.ttf";
+		$fnt['Comic Sans MS'] = $this->_storeManager->getStore()->getBaseUrl()."font/comic_5.ttf";
+		$fnt['Courier New'] = $this->_storeManager->getStore()->getBaseUrl()."font/cour_5.ttf";
+		$fnt['Georgia'] = $this->_storeManager->getStore()->getBaseUrl()."font/georgia_5.ttf";
+		$fnt['Impact'] = $this->_storeManager->getStore()->getBaseUrl()."font/impact_7.ttf";
+		$fnt['Lucida Console'] = $this->_storeManager->getStore()->getBaseUrl()."font/lucon_3.ttf";
+		$fnt['Lucida Sans Unicode'] = $this->_storeManager->getStore()->getBaseUrl()."font/l_4.ttf";
+		$fnt['Palatino Linotype'] = $this->_storeManager->getStore()->getBaseUrl()."font/pala_7.ttf";
+		$fnt['Tahoma'] = $this->_storeManager->getStore()->getBaseUrl()."font/tahoma_3.ttf";
+		$fnt['Trebuchet MS'] = $this->_storeManager->getStore()->getBaseUrl()."font/trebuc_3.ttf";
+		$fnt['Verdana'] = $this->_storeManager->getStore()->getBaseUrl()."font/verdana_5.ttf";
+
+		$left = ($object->left) /(96*1.77);
+		$top = ($object->top) /(96*1.87);
+		
+						
+		if($left < 0 ){$left *= -1;}
+		if($top < 0 ){$top *= -1;}
+			
+		$width = ($object->width * $object->scaleX) / (96*1.77);
+		$height = ($object->height * $object->scaleY) / (96*1.87);
+		
+		//$width = ($object->width * $object->scaleX) / 96;
+		//$height = ($object->height * $object->scaleY) / 96;
+		
+		
+
+		$align = $style = $font_weight= $font_decoration = '';
+		$align = $object->textAlign ? substr(ucwords($object->textAlign),0,1): '';
+		$style = $object->fontStyle == 'italic' ? 'I': '';
+		$font_weight = $object->fontWeight == 'bold' ? 'B': '' ;
+		$font_decoration = ($object->underline) ? 'U': '' ;
+		
+		try {
+			$newColor = $object->fill;
+			$color = $this->hexToRgb($newColor);
+			$pdf->setXY($left, $top);
+			$pdf->Rotate(360-$object->angle);
+			
+			$pdf->SetCellPadding(0);
+			$objspacing = $object->charSpacing;
+			if( $objspacing != 0 ){
+				//$spacing = $object->charSpacing/96;
+				//$pdf->setFontStretching(110);
+			}
+			$spacing = $object->charSpacing/10000;
+	
+			$pdf->setFontSpacing($spacing);
+			//$pdf->setCellHeightRatio(1.296648);
+			$pdf->setCellHeightRatio($object->lineHeight * 1.1178);
+						
+			
+			$get_fontsize = ($object->fontSize*$object->scaleY/ (96*1.77))*71; //convert to 'pt'
+
+			$font_family = $object->fontFamily;
+			$fontname = \TCPDF_FONTS::addTTFfont($fnt[$object->fontFamily], 'TrueTypeUnicode', '', 32);	
+			
+			$pdf->SetFont($font_family, $font_weight.$style.$font_decoration,$get_fontsize, '', true);
+			
+			//$pdf->SetFont('times', $font_weight.$style.$font_decoration, $get_fontsize,'', 'default', true);
+			
+			
+			$pdf->SetTextColor($color[0], $color[1], $color[2]);	
+			if(isset($object->fill->type)) {
+				if($object->fill->type == 'linear'){
+					$color1 = $object->fill->colorStops[0]->color;
+					$color2 = $object->fill->colorStops[1]->color;
+					$coords = $object->fill->coords;
+					$pdf->LinearGradient(20, 45, 80, 80, $color1, $color2, $coords);
+				}
+			}
+			
+			if($object->shadow != null) {
+				if(isset($object->shadow->offsetX)){
+					$depth_w = $object->shadow->offsetX/(96*1.77);
+					$depth_h = $object->shadow->offsetY/(96*1.87);
+					//
+					$pdf->setTextShadow(array('enabled' => true, 'depth_w' => $depth_w, 'depth_h' => $depth_h, 'color' => $this->hexToRgb($object->shadow->color), 'opacity' => 0.5, 'blend_mode' => 'Normal'));
+				}
+			}  else {
+				$pdf->setTextShadow(array('enabled'=>false, 'depth_w'=>0, 'depth_h'=>0, 'color'=>array(255, 0, 0), 'opacity'=>0.1, 'blend_mode'=>'Normal'));
+				
+			} 
+			
+			$pdf->SetAlpha($object->opacity);
+			
+			//$pdf->Cell($width, $height, $object->text, 0, $align, false);
+			$pdf->MultiCell($width, $height, $object->text, 0, $align, false, 1, '', '', true, 0, True, true, 0, 'T', false);
+			$pdf->SetAlpha();					
+			
+		}catch (Exception $e) {
+			echo $e->getMessage();
+			exit();
+		}
+		$pdf->StopTransform();
+	}
+	
+	
+	
+	/**
+	*
+	*/
+	public function getCanvasJsonfile($convasData) {
+		return json_decode($convasData);
+		
+	}
+	
+	//The greatest common divisor (GCD) 
+	public function gcd($a, $b) {
+		return $b ? gcd($b, $a % $b) : $a;
+	}
+
+	public function changeDpi($px) {
+		//return ($px/96)*300;
+		return $px;
+	}
+
+	/*
+	* scale
+	*/
+	public function scale($px, $r1, $r2) {
+		return $px * $r1 / $r2;
+	}
+	
+	/**
+	* color code
+	*/
+	public function hexToRgb($hex, $alpha = false) {
+	   $hex    = str_replace('#', '', $hex);
+	   $length   = strlen($hex);
+	   $rgb[0] = hexdec($length == 6 ? substr($hex, 0, 2) : ($length == 3 ? str_repeat(substr($hex, 0, 1), 2) : 0));
+	   $rgb[1] = hexdec($length == 6 ? substr($hex, 2, 2) : ($length == 3 ? str_repeat(substr($hex, 1, 1), 2) : 0));
+	   $rgb[2] = hexdec($length == 6 ? substr($hex, 4, 2) : ($length == 3 ? str_repeat(substr($hex, 2, 1), 2) : 0));
+	   if ( $alpha ) {
+		  $rgb['a'] = $alpha;
+	   }
+	   return $rgb;
+	}
+}
